@@ -9,7 +9,9 @@ The build plan split into small, shippable tasks. Each one ends with something t
 - [x] **T0.2** Shared TypeScript config, scripts (`dev`, `test`, `typecheck`, `build`)
 - [x] **T0.3** Cricketer seed data: current + retired men's players (`packages/shared/src/data/players.ts`)
 - [x] **T0.4** GitHub Actions CI: install, typecheck, test on every push
-- [ ] **T0.5** Grow the pool to ~250 players and add a data-check script (no duplicate ids, valid teams)
+- [x] **T0.5** Grow the pool to 350+ players (incl. tough deep cuts) with data checks in tests (unique ids/names, known IPL teams, ≥3 per country)
+- [ ] **T0.6** Script to refresh each player's last IPL team from Cricsheet's free IPL data (ODC-BY) after every auction
+- [ ] **T0.7** Optional one-off enrichment via CricketData.org free tier (100 calls/day) to double-check country / batting / bowling style
 
 ## Milestone 1 – Core game engine (weeks 2–3)
 
@@ -61,7 +63,7 @@ The build plan split into small, shippable tasks. Each one ends with something t
 ## Milestone 5 – v2 (weeks 7–12)
 
 - [ ] **T5.1** Player-pool filters: IPL only, by country, current vs retired
-- [ ] **T5.2** Difficulty levels via popularity score
+- [x] **T5.2** Difficulty levels via popularity score (Easy / Mixed / Hard)
 - [ ] **T5.3** PWA install (web only, no app stores)
 - [ ] **T5.4** LiveKit voice for remote rooms
 - [ ] **T5.5** Accounts (Google / phone OTP), stats, history in Postgres

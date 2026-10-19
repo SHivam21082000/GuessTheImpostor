@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CRICKETERS, getCricketer } from "./data/players";
+import { CRICKETERS, getCricketer, IPL } from "./data/players";
 import {
   addPlayer,
   callGuess,
@@ -10,6 +10,7 @@ import {
   markReady,
   nextRound,
   onTimeout,
+  poolFor,
   removePlayer,
   startMatch,
   submitClue,
@@ -19,7 +20,7 @@ import {
 } from "./engine";
 import { chooseHint, eligibleHintTypes, MIN_HINT_MATCHES, countMatches, hintValue } from "./hints";
 import { clueRevealsName, searchCricketers } from "./names";
-import type { GameState } from "./types";
+import { DEFAULT_SETTINGS, type GameState } from "./types";
 import { buildView } from "./view";
 
 function seeded(seed: number) {
@@ -66,6 +67,37 @@ describe("player data", () => {
   });
   it("includes retired players", () => {
     expect(CRICKETERS.some((c) => c.era === "retired")).toBe(true);
+  });
+  it("has a big pool with plenty of tough players", () => {
+    expect(CRICKETERS.length).toBeGreaterThanOrEqual(250);
+    expect(CRICKETERS.filter((c) => c.popularity <= 2).length).toBeGreaterThanOrEqual(60);
+  });
+  it("only uses known IPL franchise names", () => {
+    const known = new Set<string>(Object.values(IPL));
+    for (const c of CRICKETERS) if (c.lastIplTeam) expect(known.has(c.lastIplTeam), c.id).toBe(true);
+  });
+  it("has at least 3 players per country so the country hint never gives it away", () => {
+    const counts = new Map<string, number>();
+    for (const c of CRICKETERS) counts.set(c.country, (counts.get(c.country) ?? 0) + 1);
+    for (const [country, n] of counts) expect(n, country).toBeGreaterThanOrEqual(3);
+  });
+  it("has no duplicate names", () => {
+    expect(new Set(CRICKETERS.map((c) => c.name)).size).toBe(CRICKETERS.length);
+  });
+});
+
+describe("difficulty", () => {
+  it("easy uses household names, hard uses deep cuts", () => {
+    const easy = poolFor({ ...DEFAULT_SETTINGS, difficulty: "easy" });
+    const hard = poolFor({ ...DEFAULT_SETTINGS, difficulty: "hard" });
+    expect(easy.every((c) => c.popularity >= 4)).toBe(true);
+    expect(hard.every((c) => c.popularity <= 2)).toBe(true);
+    expect(poolFor(DEFAULT_SETTINGS)).toHaveLength(CRICKETERS.length);
+  });
+  it("combines with the era filter and stays playable", () => {
+    for (const eraFilter of ["all", "current", "retired"] as const)
+      for (const difficulty of ["easy", "mixed", "hard"] as const)
+        expect(poolFor({ ...DEFAULT_SETTINGS, eraFilter, difficulty }).length).toBeGreaterThanOrEqual(12);
   });
 });
 

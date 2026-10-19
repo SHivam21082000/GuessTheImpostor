@@ -76,5 +76,7 @@ on port 4000 of the same host automatically.
 
 ## Player data
 
-The cricketer pool is in `packages/shared/src/data/players.ts`. Last IPL teams change
+The cricketer pool (350+ current and retired men's players across 10 countries) is in
+`packages/shared/src/data/players.ts` and `players-extra.ts`. Each player has a popularity
+score from 1 (deep cut) to 5 (household name), which powers the Easy / Mixed / Hard setting. Last IPL teams change
 after every auction, so re-check them each season (TASKS.md T0.5).

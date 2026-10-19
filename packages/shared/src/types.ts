@@ -64,7 +64,11 @@ export interface Settings {
   guessSeconds: number;
   hintMode: "random" | HintType;
   eraFilter: "all" | Era;
+  /** easy = household names, hard = deep cuts, mixed = everyone. */
+  difficulty: Difficulty;
 }
+
+export type Difficulty = "easy" | "mixed" | "hard";
 
 export const DEFAULT_SETTINGS: Settings = {
   turnSeconds: 30,
@@ -76,6 +80,7 @@ export const DEFAULT_SETTINGS: Settings = {
   guessSeconds: 30,
   hintMode: "random",
   eraFilter: "all",
+  difficulty: "mixed",
 };
 
 export const MIN_PLAYERS = 3;

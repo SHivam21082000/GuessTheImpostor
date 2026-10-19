@@ -1,4 +1,8 @@
-import type { Cricketer, Era, Hand, PlayingRole } from "../types";
+import type { Cricketer } from "../types";
+import { IPL, L, p, R } from "./helpers";
+import { EXTRA_CRICKETERS } from "./players-extra";
+
+export { IPL } from "./helpers";
 
 /**
  * Seed pool of men's cricketers, current and retired.
@@ -8,41 +12,7 @@ import type { Cricketer, Era, Hand, PlayingRole } from "../types";
  * re-checked after each auction (see TASKS.md T0.5).
  */
 
-// IPL franchise names (current names for renamed franchises).
-export const IPL = {
-  CSK: "Chennai Super Kings",
-  MI: "Mumbai Indians",
-  RCB: "Royal Challengers Bengaluru",
-  KKR: "Kolkata Knight Riders",
-  DC: "Delhi Capitals",
-  PBKS: "Punjab Kings",
-  RR: "Rajasthan Royals",
-  SRH: "Sunrisers Hyderabad",
-  GT: "Gujarat Titans",
-  LSG: "Lucknow Super Giants",
-  DECCAN: "Deccan Chargers",
-  PUNE: "Pune Warriors",
-} as const;
-
-function p(
-  id: string,
-  name: string,
-  aliases: string[],
-  country: string,
-  role: PlayingRole,
-  battingHand: Hand,
-  bowlingStyle: string | null,
-  lastIplTeam: string | null,
-  era: Era,
-  popularity: number,
-): Cricketer {
-  return { id, name, aliases, country, role, battingHand, bowlingStyle, lastIplTeam, era, popularity };
-}
-
-const R = "right";
-const L = "left";
-
-export const CRICKETERS: Cricketer[] = [
+const BASE: Cricketer[] = [
   // ---------------- India – current ----------------
   p("virat-kohli", "Virat Kohli", ["King Kohli", "Chiku"], "India", "batter", R, null, IPL.RCB, "current", 5),
   p("rohit-sharma", "Rohit Sharma", ["Hitman", "Ro"], "India", "batter", R, null, IPL.MI, "current", 5),
@@ -178,6 +148,8 @@ export const CRICKETERS: Cricketer[] = [
   p("mustafizur-rahman", "Mustafizur Rahman", ["Fizz"], "Bangladesh", "bowler", L, "left-arm fast-medium", IPL.DC, "current", 3),
   p("tamim-iqbal", "Tamim Iqbal", [], "Bangladesh", "batter", L, null, null, "retired", 3),
 ];
+
+export const CRICKETERS: Cricketer[] = [...BASE, ...EXTRA_CRICKETERS];
 
 export const CRICKETERS_BY_ID: ReadonlyMap<string, Cricketer> = new Map(CRICKETERS.map((c) => [c.id, c]));
 

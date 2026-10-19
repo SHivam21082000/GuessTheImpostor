@@ -175,6 +175,16 @@ function SettingsPanel({ settings }: { settings: Settings }) {
         onChange={(v) => set({ hintMode: v as Settings["hintMode"] })}
       />
       <Select
+        label="Difficulty"
+        value={settings.difficulty}
+        options={[
+          ["easy", "Easy: household names"],
+          ["mixed", "Mixed: everyone"],
+          ["hard", "Hard: deep cuts"],
+        ]}
+        onChange={(v) => set({ difficulty: v as Settings["difficulty"] })}
+      />
+      <Select
         label="Players"
         value={settings.eraFilter}
         options={[
@@ -216,7 +226,7 @@ function Select({
 function SettingsSummary({ settings: s }: { settings: Settings }) {
   return (
     <p className="text-center text-xs text-chalk-dim">
-      {s.rounds} rounds · {s.laps} lap{s.laps > 1 ? "s" : ""} · {s.turnSeconds}s turns · hint:{" "}
+      {s.rounds} rounds · {s.difficulty} · {s.laps} lap{s.laps > 1 ? "s" : ""} · {s.turnSeconds}s turns · hint:{" "}
       {s.hintMode === "random" ? "random" : HINT_LABELS[s.hintMode].toLowerCase()}
     </p>
   );

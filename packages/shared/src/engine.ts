@@ -41,8 +41,15 @@ const RECENT_LIMIT = 20;
 
 // ---------- helpers ----------
 
+/** Below this many players a filter is too narrow to play; fall back to the wider pool. */
+export const MIN_POOL = 12;
+
 export function poolFor(settings: Settings): Cricketer[] {
-  return settings.eraFilter === "all" ? CRICKETERS : CRICKETERS.filter((c) => c.era === settings.eraFilter);
+  const byEra = settings.eraFilter === "all" ? CRICKETERS : CRICKETERS.filter((c) => c.era === settings.eraFilter);
+  const d = settings.difficulty ?? "mixed";
+  if (d === "mixed") return byEra;
+  const byLevel = byEra.filter((c) => (d === "easy" ? c.popularity >= 4 : c.popularity <= 2));
+  return byLevel.length >= MIN_POOL ? byLevel : byEra;
 }
 
 function shuffle<T>(arr: T[], rng: () => number): T[] {
@@ -172,6 +179,7 @@ export function updateSettings(state: GameState, playerId: string, patch: Partia
   s.guessSeconds = clamp(s.guessSeconds, 10, 120);
   if (!["random", "country", "profile", "iplTeam"].includes(s.hintMode)) s.hintMode = "random";
   if (!["all", "current", "retired"].includes(s.eraFilter)) s.eraFilter = "all";
+  if (!["easy", "mixed", "hard"].includes(s.difficulty)) s.difficulty = "mixed";
   state.settings = s;
 }
 
