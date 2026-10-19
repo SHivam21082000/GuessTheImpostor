@@ -8,6 +8,7 @@ import { clearSeat, getProfile, getSeat, saveProfile, saveSeat } from "@/lib/ses
 import { useGame } from "@/lib/store";
 import { AVATARS, Toast } from "@/components/ui";
 import { GameScreen } from "@/components/screens";
+import { useAudioUnlock } from "@/components/effects";
 
 export default function RoomPage() {
   const { code: raw } = useParams<{ code: string }>();
@@ -15,6 +16,7 @@ export default function RoomPage() {
   const router = useRouter();
   const { view, setView, setOffset, setConnected, connected, showToast } = useGame();
   const [needsJoin, setNeedsJoin] = useState(false);
+  useAudioUnlock();
 
   const resume = useCallback(async () => {
     const seat = getSeat(code);

@@ -48,7 +48,7 @@ The build plan split into small, shippable tasks. Each one ends with something t
 - [x] **T3.8** Impostor guess screen with autocomplete
 - [x] **T3.9** Round result + match summary, play again
 - [x] **T3.10** Reconnect after refresh, clock-offset sync for timers
-- [ ] **T3.11** Animations (card flip, stumps falling), sounds, vibration on your turn
+- [x] **T3.11** Animations (card flip, stumps falling), sounds, vibration on your turn
 - [ ] **T3.12** QR code for room join
 
 ## Milestone 4 – Launch (weeks 5–6)

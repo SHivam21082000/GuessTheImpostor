@@ -97,3 +97,238 @@ body {
 .pop {
   animation: pop 0.25s ease-out;
 }
+
+/* ---------- Screen transitions ---------- */
+@keyframes phase-in {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.phase-in {
+  animation: phase-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(-16px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.slide-in {
+  animation: slide-in 0.3s ease-out both;
+}
+
+/* ---------- Secret card flip ---------- */
+.flip {
+  perspective: 1200px;
+}
+.flip-inner {
+  display: grid;
+  transition: transform 0.6s cubic-bezier(0.3, 1.3, 0.5, 1);
+  transform-style: preserve-3d;
+}
+.flip.is-open .flip-inner {
+  transform: rotateY(180deg);
+}
+.flip-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-back {
+  transform: rotateY(180deg);
+}
+
+/* ---------- Turn and timer ---------- */
+@keyframes turn-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(242, 193, 78, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(242, 193, 78, 0);
+  }
+}
+.turn-pulse {
+  animation: turn-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: rotate(-4deg) scale(1.04);
+  }
+  75% {
+    transform: rotate(4deg) scale(1.04);
+  }
+}
+.shake {
+  animation: shake 0.5s ease-in-out infinite;
+}
+
+@keyframes bump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.bump {
+  animation: bump 0.3s ease-out;
+}
+
+@keyframes float-up {
+  from {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.float-up {
+  animation: float-up 0.5s 0.4s ease-out both;
+}
+
+@keyframes count-up {
+  0% {
+    transform: scale(1.4);
+    color: var(--color-gold);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.count-up {
+  display: inline-block;
+  animation: count-up 0.6s 0.5s ease-out both;
+}
+
+/* ---------- Stumps getting bowled ---------- */
+.stumps .ball {
+  opacity: 0;
+}
+.stumps .stump,
+.stumps .bail {
+  transform-box: fill-box;
+}
+.stumps .stump {
+  transform-origin: 50% 100%;
+}
+.stumps .bail {
+  transform-origin: 50% 50%;
+}
+.stumps.is-knocked .ball {
+  animation: ball-in 0.35s ease-in forwards;
+}
+.stumps.is-knocked .s1 {
+  animation: stump-left 0.6s 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+.stumps.is-knocked .s2 {
+  animation: stump-mid 0.6s 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+.stumps.is-knocked .s3 {
+  animation: stump-right 0.6s 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+.stumps.is-knocked .b1 {
+  animation: bail-left 0.9s 0.3s cubic-bezier(0.2, 0.7, 0.4, 1) forwards;
+}
+.stumps.is-knocked .b2 {
+  animation: bail-right 0.9s 0.3s cubic-bezier(0.2, 0.7, 0.4, 1) forwards;
+}
+@keyframes ball-in {
+  0% {
+    opacity: 1;
+    transform: translate(-90px, -30px) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+@keyframes stump-left {
+  to {
+    transform: rotate(-28deg) translateX(-6px);
+  }
+}
+@keyframes stump-mid {
+  to {
+    transform: rotate(14deg) translateY(4px);
+  }
+}
+@keyframes stump-right {
+  to {
+    transform: rotate(32deg) translateX(6px);
+  }
+}
+@keyframes bail-left {
+  to {
+    transform: translate(-46px, -40px) rotate(-260deg);
+    opacity: 0.85;
+  }
+}
+@keyframes bail-right {
+  to {
+    transform: translate(50px, -52px) rotate(300deg);
+    opacity: 0.85;
+  }
+}
+
+/* ---------- Confetti ---------- */
+.confetti {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 40;
+}
+.confetti span {
+  position: absolute;
+  top: -20px;
+  border-radius: 2px;
+  animation-name: confetti-fall;
+  animation-timing-function: cubic-bezier(0.3, 0.6, 0.6, 1);
+  animation-fill-mode: both;
+  animation-iteration-count: 2;
+}
+@keyframes confetti-fall {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(40px, 105vh, 0) rotate(720deg);
+    opacity: 0.9;
+  }
+}
+
+/* ---------- Accessibility ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .confetti {
+    display: none;
+  }
+}

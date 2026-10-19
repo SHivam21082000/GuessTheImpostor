@@ -27,7 +27,11 @@ export function Countdown({ endsAt, total, size = 72 }: { endsAt: number | null;
   const frac = total > 0 ? Math.min(1, left / total) : 0;
   const urgent = left <= 5;
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }} aria-label={`${left} seconds left`}>
+    <div
+      className={`relative shrink-0 ${urgent && left > 0 ? "shake" : ""}`}
+      style={{ width: size, height: size }}
+      aria-label={`${left} seconds left`}
+    >
       <svg width={size} height={size} className="-rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(243,239,227,0.12)" strokeWidth="6" fill="none" />
         <circle

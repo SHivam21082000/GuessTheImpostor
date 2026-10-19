@@ -12,12 +12,17 @@ import {
 } from "@gti/shared";
 import { send } from "@/lib/socket";
 import { useGame } from "@/lib/store";
+import { sfx } from "@/lib/sound";
 import { CricketerCardView, Countdown, HintCardView, PlayerChip } from "./ui";
+import { Confetti, MuteButton, Stumps, useGameEffects } from "./effects";
 
 /** Send an action; show the server's error as a toast. */
 async function act(event: Parameters<typeof send>[0], payload?: unknown) {
   const res = await send(event, payload);
-  if (!res.ok) useGame.getState().showToast(res.error);
+  if (!res.ok) {
+    sfx.error();
+    useGame.getState().showToast(res.error);
+  }
   return res.ok;
 }
 
@@ -25,17 +30,22 @@ const nameOf = (v: RoomView, id: string | null | undefined) => v.players.find((p
 const seatOf = (v: RoomView, id: string) => v.players.find((p) => p.id === id);
 
 export function GameScreen({ view }: { view: RoomView }) {
+  useGameEffects(view);
+  // Re-key per phase (and per revote) so each screen animates in.
+  const screenKey = `${view.phase}-${view.round?.number ?? 0}`;
   return (
     <div className="space-y-5">
       <TopBar view={view} />
-      {view.phase === "lobby" && <Lobby view={view} />}
-      {view.phase === "reveal" && <Reveal view={view} />}
-      {view.phase === "clues" && <Clues view={view} />}
-      {view.phase === "discussion" && <Discussion view={view} />}
-      {(view.phase === "vote" || view.phase === "revote") && <Vote view={view} />}
-      {view.phase === "guess" && <Guess view={view} />}
-      {view.phase === "result" && <Result view={view} />}
-      {view.phase === "matchEnd" && <MatchEnd view={view} />}
+      <div key={screenKey} className="phase-in">
+        {view.phase === "lobby" && <Lobby view={view} />}
+        {view.phase === "reveal" && <Reveal view={view} />}
+        {view.phase === "clues" && <Clues view={view} />}
+        {view.phase === "discussion" && <Discussion view={view} />}
+        {(view.phase === "vote" || view.phase === "revote") && <Vote view={view} />}
+        {view.phase === "guess" && <Guess view={view} />}
+        {view.phase === "result" && <Result view={view} />}
+        {view.phase === "matchEnd" && <MatchEnd view={view} />}
+      </div>
     </div>
   );
 }
@@ -43,13 +53,16 @@ export function GameScreen({ view }: { view: RoomView }) {
 function TopBar({ view }: { view: RoomView }) {
   const inMatch = view.phase !== "lobby";
   return (
-    <div className="flex items-center justify-between text-sm">
+    <div className="flex items-center justify-between gap-3 text-sm">
       <span className="scoreboard text-xl tracking-[0.2em] text-chalk-dim">{view.code}</span>
-      {inMatch && view.round && (
-        <span className="scoreboard text-xl text-chalk-dim">
-          Round {view.round.number}/{view.settings.rounds}
-        </span>
-      )}
+      <span className="flex items-center gap-3">
+        {inMatch && view.round && (
+          <span className="scoreboard text-xl text-chalk-dim">
+            Round {view.round.number}/{view.settings.rounds}
+          </span>
+        )}
+        <MuteButton />
+      </span>
     </div>
   );
 }
@@ -101,7 +114,7 @@ function Lobby({ view }: { view: RoomView }) {
         </h2>
         <ul className="space-y-2">
           {view.players.map((p) => (
-            <li key={p.id} className="card flex items-center justify-between px-4 py-3">
+            <li key={p.id} className="card slide-in flex items-center justify-between px-4 py-3">
               <span className="flex items-center gap-3">
                 <span className="text-2xl">{p.avatar}</span>
                 <span className={p.connected ? "" : "opacity-50"}>
@@ -215,28 +228,45 @@ function SettingsSummary({ settings: s }: { settings: Settings }) {
 function SecretCard({ view, startOpen = false, allowGuess = false }: { view: RoomView; startOpen?: boolean; allowGuess?: boolean }) {
   const [open, setOpen] = useState(startOpen);
   const role = view.role;
+  const toggle = (o: boolean) => {
+    sfx.flip();
+    setOpen(o);
+  };
   return (
-    <div className="card relative overflow-hidden">
-      {open ? (
-        <div className="pop space-y-4 p-5">
-          {role.kind === "crew" && <CricketerCardView card={role.card} />}
-          {role.kind === "impostor" && <HintCardView hint={role.hint} />}
-          {allowGuess && role.kind === "impostor" && (
-            <button className="btn btn-danger w-full" onClick={() => act("guess:call")}>
-              I know it! Guess now
-            </button>
-          )}
-          <button className="btn btn-ghost w-full" onClick={() => setOpen(false)}>
-            Hide card
-          </button>
-        </div>
-      ) : (
-        <button className="flex w-full flex-col items-center gap-2 p-8" onClick={() => setOpen(true)}>
+    <div className={`flip ${open ? "is-open" : ""}`}>
+      <div className="flip-inner">
+        {/* Front: face-down card */}
+        <button
+          className="flip-face card flex w-full flex-col items-center justify-center gap-2 p-8"
+          onClick={() => toggle(true)}
+          tabIndex={open ? -1 : 0}
+          aria-hidden={open}
+        >
           <span className="text-4xl">🏏</span>
           <span className="scoreboard text-3xl">Tap to see your card</span>
           <span className="text-xs text-chalk-dim">Keep your screen hidden from others</span>
         </button>
-      )}
+        {/* Back: your role. Content only mounts while open so it can't be read mid-flip. */}
+        <div
+          className={`flip-face flip-back card space-y-4 p-5 ${role.kind === "impostor" ? "!border-leather/60" : "!border-gold/50"}`}
+          aria-hidden={!open}
+        >
+          {open && (
+            <>
+              {role.kind === "crew" && <CricketerCardView card={role.card} />}
+              {role.kind === "impostor" && <HintCardView hint={role.hint} />}
+              {allowGuess && role.kind === "impostor" && (
+                <button className="btn btn-danger w-full" onClick={() => act("guess:call")}>
+                  I know it! Guess now
+                </button>
+              )}
+              <button className="btn btn-ghost w-full" onClick={() => toggle(false)}>
+                Hide card
+              </button>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -279,7 +309,7 @@ function ClueBoard({ view }: { view: RoomView }) {
           {clues.map((c, i) => {
             const s = seatOf(view, c.playerId);
             return (
-              <li key={i} className="card pop flex items-start gap-3 px-4 py-2.5">
+              <li key={i} className="card slide-in flex items-start gap-3 px-4 py-2.5">
                 <span className="text-lg">{s?.avatar ?? "❔"}</span>
                 <span className="min-w-0">
                   <span className="block text-xs text-chalk-dim">
@@ -311,7 +341,7 @@ function Clues({ view }: { view: RoomView }) {
 
   return (
     <div className="space-y-5">
-      <section className={`card p-5 ${myTurn ? "ring-2 ring-gold" : ""}`}>
+      <section key={r.speakerId ?? "none"} className={`card pop p-5 ${myTurn ? "ring-2 ring-gold turn-pulse" : ""}`}>
         <div className="flex items-center gap-4">
           <Countdown endsAt={view.endsAt} total={view.settings.turnSeconds} />
           <div className="min-w-0">
@@ -348,7 +378,11 @@ function Clues({ view }: { view: RoomView }) {
         {r.turnOrder.map((id, i) => {
           const s = seatOf(view, id);
           if (!s) return null;
-          return <PlayerChip key={id} seat={s} highlight={id === r.speakerId} dim={i < r.turnOrder.indexOf(r.speakerId ?? "")} />;
+          return (
+            <div key={id} className={`rounded-full ${id === r.speakerId ? "turn-pulse" : ""}`}>
+              <PlayerChip seat={s} highlight={id === r.speakerId} dim={i < r.turnOrder.indexOf(r.speakerId ?? "")} />
+            </div>
+          );
         })}
       </div>
 
@@ -403,9 +437,12 @@ function Vote({ view }: { view: RoomView }) {
           const picked = view.yourVote === p.id;
           return (
             <button
-              key={p.id}
-              onClick={() => act("vote:cast", { targetId: p.id })}
-              className={`card flex flex-col items-center gap-1 p-4 transition ${picked ? "!border-gold ring-2 ring-gold" : ""}`}
+              key={`${p.id}-${picked}`}
+              onClick={() => {
+                sfx.vote();
+                void act("vote:cast", { targetId: p.id });
+              }}
+              className={`card flex flex-col items-center gap-1 p-4 transition ${picked ? "bump !border-gold ring-2 ring-gold" : ""}`}
             >
               <span className="text-3xl">{p.avatar}</span>
               <span className="truncate font-medium">{p.name}</span>
@@ -431,7 +468,8 @@ function Guess({ view }: { view: RoomView }) {
 
   if (!amImpostor) {
     return (
-      <section className="card space-y-3 p-6 text-center">
+      <section className="card flex flex-col items-center space-y-3 p-6 text-center">
+        {!r.midRoundGuess && <Stumps knocked />}
         <Countdown endsAt={view.endsAt} total={view.settings.guessSeconds} size={88} />
         <p className="scoreboard text-4xl">{r.midRoundGuess ? "The impostor called it!" : "Impostor caught!"}</p>
         <p className="text-chalk-dim">
@@ -443,6 +481,7 @@ function Guess({ view }: { view: RoomView }) {
 
   return (
     <div className="space-y-4">
+      {!r.midRoundGuess && <Stumps knocked />}
       <section className="card flex items-center gap-4 p-5">
         <Countdown endsAt={view.endsAt} total={view.settings.guessSeconds} />
         <div>
@@ -494,8 +533,8 @@ function Scoreboard({ view, points }: { view: RoomView; points?: Record<string, 
             <span className="font-medium">{p.name}</span>
           </span>
           <span className="flex items-center gap-2">
-            {points?.[p.id] ? <span className="text-sm text-gold">+{points[p.id]}</span> : null}
-            <span className="scoreboard text-3xl">{p.score}</span>
+            {points?.[p.id] ? <span className="float-up text-sm text-gold">+{points[p.id]}</span> : null}
+            <span className={`scoreboard text-3xl ${points?.[p.id] ? "count-up" : ""}`}>{p.score}</span>
           </span>
         </li>
       ))}
@@ -518,7 +557,10 @@ function Result({ view }: { view: RoomView }) {
 
   return (
     <div className="space-y-5">
-      <section className="pop text-center">
+      <section className="pop space-y-3 text-center">
+        {(rv.outcome === "caughtWrongGuess" || rv.outcome === "caughtRightGuess") && <Stumps knocked />}
+        {rv.outcome === "midGuessWrong" && <p className="text-5xl">🙅</p>}
+        {(rv.outcome === "escaped" || rv.outcome === "midGuessRight") && <p className="pop text-5xl">🥷</p>}
         <p className={`scoreboard text-5xl leading-none ${o.crewWon ? "text-gold" : o.crewWon === false ? "text-leather" : ""}`}>{o.title}</p>
       </section>
 
@@ -579,8 +621,9 @@ function MatchEnd({ view }: { view: RoomView }) {
   const winners: Seat[] = view.players.filter((p) => p.score === top);
   return (
     <div className="space-y-5">
+      <Confetti />
       <section className="pop space-y-2 pt-4 text-center">
-        <p className="text-5xl">🏆</p>
+        <p className="bump text-6xl">🏆</p>
         <p className="scoreboard text-5xl text-gold">{winners.map((w) => w.name).join(" & ")}</p>
         <p className="text-chalk-dim">{winners.length > 1 ? "share the win" : "wins the match"} with {top} points</p>
       </section>
