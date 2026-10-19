@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { JoinResult } from "@gti/shared";
-import { send } from "@/lib/socket";
+import { getSocket, send } from "@/lib/socket";
 import { getProfile, saveProfile, saveSeat } from "@/lib/session";
 import { AVATARS } from "@/components/ui";
 
@@ -15,10 +15,22 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [waking, setWaking] = useState(false);
+
   useEffect(() => {
     const p = getProfile();
     setName(p.name);
     setAvatar(p.avatar);
+    // Connect straight away: on free hosting the game server sleeps when idle,
+    // so this wakes it up while the player types their name.
+    const s = getSocket();
+    const t = setTimeout(() => setWaking(!s.connected), 1500);
+    const onConnect = () => setWaking(false);
+    s.on("connect", onConnect);
+    return () => {
+      clearTimeout(t);
+      s.off("connect", onConnect);
+    };
   }, []);
 
   async function go(kind: "create" | "join") {
@@ -89,6 +101,11 @@ export default function Home() {
           </button>
         </div>
         {error && <p className="text-center text-sm text-leather">{error}</p>}
+        {waking && (
+          <p className="text-center text-xs text-chalk-dim">
+            Waking up the game server… this can take up to a minute the first time.
+          </p>
+        )}
       </section>
 
       <details className="card p-5 text-sm text-chalk-dim">

@@ -56,7 +56,7 @@ The build plan split into small, shippable tasks. Each one ends with something t
 ## Milestone 4 – Launch (weeks 5–6)
 
 - [ ] **T4.1** Playwright multi-tab end-to-end test (4 players, full match)
-- [ ] **T4.2** Deploy web to Vercel, server to Railway/Render (Mumbai/Singapore region)
+- [x] **T4.2** Deploy config: Vercel (web) + Render free (server, Singapore), see DEPLOY.md
 - [ ] **T4.3** Sentry + PostHog
 - [ ] **T4.4** Playtests with friends, tune default timers and scoring
 

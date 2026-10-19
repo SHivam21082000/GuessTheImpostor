@@ -1,0 +1,19 @@
+# Render Blueprint: deploys the realtime game server on the free plan.
+# Render dashboard -> New -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: guess-the-impostor-server
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install -g pnpm@10.28.0 && pnpm install --frozen-lockfile && pnpm --filter @gti/server build
+    startCommand: node apps/server/dist/index.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Set this to your Vercel URL after the website is deployed,
+      # e.g. https://guess-the-impostor.vercel.app
+      - key: CORS_ORIGIN
+        sync: false
